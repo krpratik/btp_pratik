@@ -26,7 +26,7 @@ while (vehicleDensity <= 1):
 			track[cell] = 1
 		# Particle based approach with series updating (Not parallel update)
 		# Set time (Number of updates) 
-		timeLimit= 500*numberOfCells
+		timeLimit= 200*numberOfCells
 		fluxCount = 0
 		for time in range(0,timeLimit) :
 			# Randomly select the particle which needs to be updated
