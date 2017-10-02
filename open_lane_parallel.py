@@ -1,63 +1,49 @@
 import random
 from random import randint
-from operator import add
+import numpy as np 
+import copy as cp
 import matplotlib.pyplot as plt
-
 # Define the number of cells on the the circular track (Basically the length of the circular Track)
 numberOfCells=100
 # Initialize alpha and beta for the simulation to begin
-alpha = 0.90
+alpha = 0.30
 beta = 0.90
-
+prob = 0.70
 # Number of times to be averaged 
-numberTrips = 250
-
+numberTrips = 50
 # Sum of tracks occupancy to find average occupancy
-finalSumTrack = [0]*numberOfCells
+finalSumTrack = np.zeros(numberOfCells)
 for i in range(0,numberTrips):
-	# Define the number of vehciles on the circular track
-	# numberOfCars= randint(0,numberOfCells)
-	# Now Positioning cars into cells
-	# Randomly select the positions of the cars onto the tracks
-	# trackWithMarkedCells = [j for j in range(0,numberOfCells)]
-	# Initialize the cells of the road. We will mark the empty cells by O and filled by 1
-	# Initializing all the cells with 0 (empty cells)
-	#track = [0]*numberOfCells
-	#cellsToFilled = random.sample(trackWithMarkedCells, numberOfCars)
-	#for cell in cellsToFilled :
-		# track[cell] = 1
-	track = [0]*numberOfCells
-
-	# Particle based approach with series updating (Not parallel update)
-	# Set time (Number of updates) 
-	timeLimit= 300*numberOfCells
-	sumTrack = [0]*numberOfCells
-	for time in range(0,timeLimit) :
+	track = np.zeros(numberOfCells)
+	timeLimit= 100000
+	warmTime = timeLimit/2
+	sumTrack = np.zeros(numberOfCells)
+	for time in range(0,timeLimit):
+		tempTrack = cp.copy(track)
 		cellsToFilled = []
-		# Randomly select the particle which needs to be updated
-		if (track[0] == 0) :
+		for index in range (0,numberOfCells-1):
+			if ((track[index]==1) and (track[(index+1)] == 0)):
+				cellsToFilled.append(index)		
+		for cell in cellsToFilled :
+			randFloat = random.uniform(0,1)
+			if (randFloat <= prob):
+				tempTrack[cell] = 0
+				tempTrack[cell+1] = 1
+		if ((0 not in cellsToFilled) and (track[0]==0)):
 			randFloat = random.uniform(0,1)
 			if (randFloat <= alpha):
-				track[0] = 1
-		else :
-			if (track[1] == 0) :
-				cellsToFilled.append(0)
-			
-		for index in range (1,numberOfCells-1):
-			if ((track[index]==1) and (track[(index+1)] == 0)):
-				cellsToFilled.append(index)
-		if (track[99] == 1) :
+				tempTrack[0] = 1
+		if ((track[numberOfCells-1]==1) and (numberOfCells-2 not in cellsToFilled)):
 			randFloat = random.uniform(0,1)
 			if (randFloat <= beta):
-				track[99] = 0		
-		for cell in cellsToFilled :
-			track[cell] = 0
-			track[cell+1] = 1
-		sumTrack = map(add, sumTrack, track)
-	sumTrack = [x/float(timeLimit) for x in sumTrack]
-	finalSumTrack = map(add, sumTrack, finalSumTrack) 
+				tempTrack[numberOfCells-1] = 0
+		track = cp.copy(tempTrack)
+		if (time > warmTime):
+			sumTrack = cp.copy(track+sumTrack)
+	sumTrack = sumTrack/float(warmTime)
+	finalSumTrack = cp.copy(sumTrack+finalSumTrack)
 	print("Trip number is "+str(i))
-finalSumTrack = [x/float(numberTrips) for x in finalSumTrack]
+finalSumTrack = finalSumTrack/float(numberTrips)
 trackWithMarkedCells = [i for i in range(0,numberOfCells)]
 plt.plot(trackWithMarkedCells, finalSumTrack)
 plt.ylabel('Averaged occupancy')
